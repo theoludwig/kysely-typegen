@@ -13,7 +13,7 @@
   "author": "Théo LUDWIG <contact@theoludwig.fr>",
   "repository": {
     "type": "git",
-    "url": "https://github.com/theoludwig/kysely-typegen.git"
+    "url": "git+https://github.com/theoludwig/kysely-typegen.git"
   },
   "files": [
     "dist"
