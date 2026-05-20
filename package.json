@@ -1,0 +1,59 @@
+{
+  "name": "kysely-typegen",
+  "version": "0.0.0-development",
+  "description": "Generate Kysely type definitions from your database.",
+  "keywords": [
+    "kysely"
+  ],
+  "homepage": "https://github.com/theoludwig/kysely-typegen#readme",
+  "bugs": {
+    "url": "https://github.com/theoludwig/kysely-typegen/issues"
+  },
+  "license": "MIT",
+  "author": "Théo LUDWIG <contact@theoludwig.fr>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/theoludwig/kysely-typegen.git"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": "./dist/index.mjs",
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "lint:typescript": "tsc --noEmit",
+    "lint:oxlint": "oxlint .",
+    "lint:oxfmt": "oxfmt . --check",
+    "oxfmt": "oxfmt .",
+    "test": "node --test",
+    "build": "tsdown",
+    "release": "semantic-release"
+  },
+  "devDependencies": {
+    "@testcontainers/postgresql": "12.0.0",
+    "@types/node": "25.9.1",
+    "kysely": "0.29.2",
+    "kysely-postgres-js": "3.0.0",
+    "oxfmt": "0.51.0",
+    "oxlint": "1.66.0",
+    "oxlint-tsgolint": "0.23.0",
+    "postgres": "3.4.9",
+    "semantic-release": "25.0.3",
+    "tsdown": "0.22.0",
+    "typescript": "6.0.3"
+  },
+  "peerDependencies": {
+    "kysely": ">=0.29.0"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  }
+}

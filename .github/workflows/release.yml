@@ -1,0 +1,43 @@
+name: "Release"
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  id-token: "write" # OIDC
+  contents: "read"
+
+jobs:
+  release:
+    runs-on: "ubuntu-latest"
+    permissions:
+      contents: "write"
+      issues: "write"
+      pull-requests: "write"
+      id-token: "write"
+    steps:
+      - uses: "actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd" # v6.0.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: "Setup Node.js"
+        uses: "actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e" # v6.4.0
+        with:
+          node-version: "24.15.0"
+          cache: "npm"
+
+      - name: "Install dependencies"
+        run: "npm clean-install"
+
+      - name: "Verify the integrity of provenance attestations and registry signatures for installed dependencies"
+        run: "npm audit signatures"
+
+      - name: "Build"
+        run: "node --run build"
+
+      - name: "Release"
+        run: "node --run release"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
