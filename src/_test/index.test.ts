@@ -33,7 +33,7 @@ const createSchema = async (database: Kysely<any>): Promise<void> => {
       return column
         .notNull()
         .primaryKey()
-        .defaultTo(sql`gen_random_uuid()`)
+        .defaultTo(sql`uuidv7()`)
     })
     .addColumn("colBool", "boolean", (column) => {
       return column.notNull()
@@ -163,7 +163,7 @@ const createSchema = async (database: Kysely<any>): Promise<void> => {
       return column
         .notNull()
         .primaryKey()
-        .defaultTo(sql`gen_random_uuid()`)
+        .defaultTo(sql`uuidv7()`)
     })
     .addColumn("username", "varchar(50)", (column) => {
       return column.notNull().unique()

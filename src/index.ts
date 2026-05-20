@@ -60,6 +60,9 @@ export abstract class KyselyTypegenDialect {
       const enumName = enumMetadata.name
       result.push(
         `export type ${enumName} = ${enumMetadata.values
+          .sort((a, b) => {
+            return a.localeCompare(b)
+          })
           .map((value) => {
             return `"${value}"`
           })
@@ -170,12 +173,7 @@ export class KyselyTypegenPostgresDialect extends KyselyTypegenDialect {
     const enums = new Map<string, string[]>()
     for (const row of rows) {
       const data = row as { enumName: string; enumValue: string }
-      enums.set(
-        data.enumName,
-        [...(enums.get(data.enumName) ?? []), data.enumValue].sort((a, b) => {
-          return a.localeCompare(b)
-        }),
-      )
+      enums.set(data.enumName, [...(enums.get(data.enumName) ?? []), data.enumValue])
     }
     return enums
   }
