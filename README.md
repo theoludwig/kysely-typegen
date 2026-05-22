@@ -12,7 +12,7 @@ Why `kysely-typegen` if there is already `kysely-codegen`? Comparison:
 
 |                               | `kysely-codegen@0.20.0`                  | `kysely-typegen`                                                                    |
 | ----------------------------- | ---------------------------------------- | ----------------------------------------------------------------------------------- |
-| **Install Size**              | 6.8 MB                                   | 5 kB                                                                                |
+| **Install Size**              | 6.8 MB                                   | 22.1 kB                                                                             |
 | **Dependencies**              | 35 total                                 | 0 (no runtime dependencies)                                                         |
 | **Type**                      | CLI                                      | Library/Programmatic Usage                                                          |
 | **Code Size/Maintainability** | Heavy                                    | Lightweight/Simple and straightforward (string manipulation instead of complex AST) |
