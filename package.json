@@ -22,6 +22,7 @@
   "types": "./dist/index.d.mts",
   "exports": {
     ".": "./dist/index.mjs",
+    "./mysql": "./dist/mysql.mjs",
     "./postgres": "./dist/postgres.mjs",
     "./package.json": "./package.json"
   },
@@ -39,11 +40,13 @@
     "release": "semantic-release"
   },
   "devDependencies": {
+    "@testcontainers/mysql": "12.0.0",
     "@testcontainers/postgresql": "12.0.0",
     "@types/node": "25.9.1",
     "@types/pg": "8.20.0",
     "kysely": "0.29.2",
     "kysely-postgres-js": "3.0.0",
+    "mysql2": "3.22.3",
     "oxfmt": "0.51.0",
     "oxlint": "1.66.0",
     "oxlint-tsgolint": "0.23.0",

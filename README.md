@@ -16,7 +16,7 @@ Why `kysely-typegen` if there is already `kysely-codegen`? Comparison:
 | **Dependencies**              | 35 total                                 | 0 (no runtime dependencies)                                                         |
 | **Type**                      | CLI                                      | Library/Programmatic Usage                                                          |
 | **Code Size/Maintainability** | Heavy                                    | Lightweight/Simple and straightforward (string manipulation instead of complex AST) |
-| **Database Support**          | PostgreSQL, MySQL, SQLite, MSSQL, LibSQL | PostgreSQL (**can be easily extended to more**)                                     |
+| **Database Support**          | PostgreSQL, MySQL, SQLite, MSSQL, LibSQL | PostgreSQL, MySQL (**can be easily extended to more**)                              |
 
 `kysely-typegen` is a **library** (not a CLI), which means you are in control of where and how to run it, and is designed to be **extensible**, easy to add support for more database dialects.
 
@@ -79,6 +79,34 @@ export const database = new Kysely<DB>({ dialect })
 export const databaseTypegen = new KyselyTypegenPostgresDialect({ database })
 ```
 
+#### MySQL
+
+```sh
+npm install mysql2
+```
+
+```ts
+// database.ts
+import { Kysely, MysqlDialect } from "kysely"
+import { KyselyTypegenMySQLDialect } from "kysely-typegen/mysql"
+import { createPool } from "mysql2"
+
+import type { DB } from "./codegen.ts"
+
+const dialect = new MysqlDialect({
+  pool: createPool({
+    database: process.env["DATABASE_NAME"] ?? "database",
+    host: process.env["DATABASE_HOST"] ?? "localhost",
+    user: process.env["DATABASE_USER"] ?? "user",
+    password: process.env["DATABASE_PASSWORD"] ?? "password",
+    port: Number.parseInt(process.env["DATABASE_PORT"] ?? "3306", 10),
+  }),
+})
+
+export const database = new Kysely<DB>({ dialect })
+export const databaseTypegen = new KyselyTypegenMySQLDialect({ database })
+```
+
 ### Generate the type definitions
 
 Create a script that uses `databaseTypegen` to introspect your database and write the generated types to a file. This script is the same regardless of the underlying database:
@@ -120,7 +148,7 @@ Fully type-safe queries derived from your actual database schema.
 
 ## Extending to other database dialects
 
-`kysely-typegen` ships with `KyselyTypegenPostgresDialect`, but you can add support for any database by extending the abstract `KyselyTypegenDialect` class.
+`kysely-typegen` ships with `KyselyTypegenPostgresDialect` and `KyselyTypegenMySQLDialect`, but you can add support for any database by extending the abstract `KyselyTypegenDialect` class.
 
 Only one thing is required:
 
@@ -150,7 +178,7 @@ export class KyselyTypegenMSSQLDialect extends KyselyTypegenDialect {
 If your database supports enums, override the optional `introspectEnums()` hook, which returns two maps:
 
 - `named`: enum name → values (emitted as `export type Name = "a" | "b"`).
-- `inline`: `${tableName}.${columnName}` → values (emitted inline at the column site, for databases where enums are anonymous per-column).
+- `inline`: `${tableName}.${columnName}` → values (emitted inline at the column site, for databases like MySQL where enums are anonymous per-column).
 
 ```ts
 import type { IntrospectedEnums } from "kysely-typegen"
