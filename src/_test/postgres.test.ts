@@ -1,20 +1,13 @@
 import type { StartedPostgreSqlContainer } from "@testcontainers/postgresql"
 import { PostgreSqlContainer } from "@testcontainers/postgresql"
-import { Kysely, sql } from "kysely"
+import { Kysely, PostgresDialect, sql } from "kysely"
 import { PostgresJSDialect } from "kysely-postgres-js"
-import path from "node:path"
-import { after, before, describe, it, snapshot } from "node:test"
+import { after, before, describe, it } from "node:test"
+import pg from "pg"
 import postgres from "postgres"
-import { KyselyTypegenPostgresDialect } from "../index.ts"
 
-snapshot.setResolveSnapshotPath((testFilePath) => {
-  if (testFilePath == null) {
-    throw new Error('"testFilePath" is null.')
-  }
-  const dir = path.dirname(testFilePath)
-  const base = path.basename(testFilePath)
-  return path.join(dir, "__snapshots__", `${base}.snapshot`)
-})
+import { KyselyTypegenPostgresDialect } from "../postgres.ts"
+import "./_setup.ts"
 
 const POSTGRES_IMAGE =
   "docker.io/postgres:18.4@sha256:f7ce845ee6873dd84be93c9828fe0d1fab0f9707dc9ac569694657398b290bce"
@@ -204,7 +197,7 @@ const createSchema = async (database: Kysely<any>): Promise<void> => {
     .execute()
 }
 
-describe("typegen", () => {
+describe("typegen PostgreSQL", () => {
   let container: StartedPostgreSqlContainer
   let database: Kysely<any>
 
@@ -229,7 +222,7 @@ describe("typegen", () => {
     await container.stop()
   })
 
-  it("generate types matching snapshot", async (testContext) => {
+  it("generate types matching snapshot (kysely-postgres-js)", async (testContext) => {
     // Arrange - Given
     const databaseTypegen = new KyselyTypegenPostgresDialect({ database })
 
@@ -241,6 +234,35 @@ describe("typegen", () => {
       lines: result.lines,
       tablesCount: result.tables.length,
       enumsCount: result.enums.length,
+      inlineEnumsCount: result.inlineEnums.size,
+    })
+  })
+
+  it("generate types matching snapshot (pg)", async (testContext) => {
+    // Arrange - Given
+    const databasePg = new Kysely<any>({
+      dialect: new PostgresDialect({
+        pool: new pg.Pool({
+          database: container.getDatabase(),
+          host: container.getHost(),
+          port: container.getPort(),
+          user: container.getUsername(),
+          password: container.getPassword(),
+        }),
+      }),
+    })
+    const databaseTypegen = new KyselyTypegenPostgresDialect({ database: databasePg })
+
+    // Act - When
+    const result = await databaseTypegen.typegen()
+    await databasePg.destroy()
+
+    // Assert - Then
+    testContext.assert.snapshot({
+      lines: result.lines,
+      tablesCount: result.tables.length,
+      enumsCount: result.enums.length,
+      inlineEnumsCount: result.inlineEnums.size,
     })
   })
 })

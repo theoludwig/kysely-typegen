@@ -10,13 +10,13 @@ Thank you [kysely-codegen](https://npmx.dev/package/kysely-codegen) for inspirat
 
 Why `kysely-typegen` if there is already `kysely-codegen`? Comparison:
 
-|                               | `kysely-codegen@0.20.0`                  | `kysely-typegen`                                             |
-| ----------------------------- | ---------------------------------------- | ------------------------------------------------------------ |
-| **Install Size**              | 6.8 MB                                   | 5 kB                                                         |
-| **Dependencies**              | 35 total                                 | 0 (no runtime dependencies)                                  |
-| **Type**                      | CLI                                      | Library/Programmatic Usage                                   |
-| **Code Size/Maintainability** | Heavy                                    | Less than 200 LOC/Simple and straightforward                 |
-| **Database Support**          | PostgreSQL, MySQL, SQLite, MSSQL, LibSQL | PostgreSQL (but can **easily be extended to more dialects**) |
+|                               | `kysely-codegen@0.20.0`                  | `kysely-typegen`                                                                    |
+| ----------------------------- | ---------------------------------------- | ----------------------------------------------------------------------------------- |
+| **Install Size**              | 6.8 MB                                   | 5 kB                                                                                |
+| **Dependencies**              | 35 total                                 | 0 (no runtime dependencies)                                                         |
+| **Type**                      | CLI                                      | Library/Programmatic Usage                                                          |
+| **Code Size/Maintainability** | Heavy                                    | Lightweight/Simple and straightforward (string manipulation instead of complex AST) |
+| **Database Support**          | PostgreSQL, MySQL, SQLite, MSSQL, LibSQL | PostgreSQL (**can be easily extended to more**)                                     |
 
 `kysely-typegen` is a **library** (not a CLI), which means you are in control of where and how to run it, and is designed to be **extensible**, easy to add support for more database dialects.
 
@@ -40,48 +40,48 @@ Peer dependencies:
 npm install kysely
 ```
 
-Kysely dialect of your choice, for example: [kysely-postgres-js](https://github.com/kysely-org/kysely-postgres-js)
-
-```sh
-npm install kysely-postgres-js postgres
-```
+Plus a Kysely dialect driver for your database (see [Setup Kysely database](#setup-kysely-database) below).
 
 ## Usage
 
 ### Setup Kysely database
 
-Create your Kysely database instance (example with [kysely-postgres-js](https://github.com/kysely-org/kysely-postgres-js)):
+Create your Kysely database instance and export a `databaseTypegen` for the script in the next section. The rest of the guide is dialect-agnostic: only this file changes per database.
+
+#### PostgreSQL
+
+`KyselyTypegenPostgresDialect` works with any Kysely PostgreSQL dialect, including the built-in [`PostgresDialect`](https://kysely.dev/docs/dialects/postgres) (using [`pg`](https://npmx.dev/package/pg)) and [`PostgresJSDialect`](https://npmx.dev/package/kysely-postgres-js) (using [`postgres`](https://npmx.dev/package/postgres)). The example below uses `kysely-postgres-js`.
+
+```sh
+npm install kysely-postgres-js postgres
+```
 
 ```ts
 // database.ts
 import { Kysely } from "kysely"
 import { PostgresJSDialect } from "kysely-postgres-js"
+import { KyselyTypegenPostgresDialect } from "kysely-typegen/postgres"
 import postgres from "postgres"
 
 import type { DB } from "./codegen.ts"
 
-export const DATABASE_USER = process.env["DATABASE_USER"] ?? "user"
-export const DATABASE_PASSWORD = process.env["DATABASE_PASSWORD"] ?? "password"
-export const DATABASE_NAME = process.env["DATABASE_NAME"] ?? "database"
-export const DATABASE_HOST = process.env["DATABASE_HOST"] ?? "localhost"
-export const DATABASE_PORT = Number.parseInt(process.env["DATABASE_PORT"] ?? "5432", 10)
-
 const dialect = new PostgresJSDialect({
   postgres: postgres({
-    database: DATABASE_NAME,
-    host: DATABASE_HOST,
-    user: DATABASE_USER,
-    password: DATABASE_PASSWORD,
-    port: DATABASE_PORT,
+    database: process.env["DATABASE_NAME"] ?? "database",
+    host: process.env["DATABASE_HOST"] ?? "localhost",
+    user: process.env["DATABASE_USER"] ?? "user",
+    password: process.env["DATABASE_PASSWORD"] ?? "password",
+    port: Number.parseInt(process.env["DATABASE_PORT"] ?? "5432", 10),
   }),
 })
 
 export const database = new Kysely<DB>({ dialect })
+export const databaseTypegen = new KyselyTypegenPostgresDialect({ database })
 ```
 
 ### Generate the type definitions
 
-Create a script that uses `kysely-typegen` to introspect your database and write the generated types to a file:
+Create a script that uses `databaseTypegen` to introspect your database and write the generated types to a file. This script is the same regardless of the underlying database:
 
 ```ts
 // scripts/typegen.ts
@@ -90,11 +90,8 @@ Create a script that uses `kysely-typegen` to introspect your database and write
 import fs from "node:fs"
 import path from "node:path"
 
-import { KyselyTypegenPostgresDialect } from "kysely-typegen"
+import { database, databaseTypegen } from "./database.ts"
 
-import { database } from "./database.ts"
-
-const databaseTypegen = new KyselyTypegenPostgresDialect({ database })
 const result = await databaseTypegen.typegen()
 const codegenContent = result.lines.join("\n")
 const codegenPath = path.join(process.cwd(), "codegen.ts")
@@ -125,40 +122,42 @@ Fully type-safe queries derived from your actual database schema.
 
 `kysely-typegen` ships with `KyselyTypegenPostgresDialect`, but you can add support for any database by extending the abstract `KyselyTypegenDialect` class.
 
-Only two things are required:
+Only one thing is required:
 
 - `scalars`: a `Record<string, string>` mapping the database column types to TypeScript types.
-- `getEnumsMap()`: a method returning a `Map<string, string[]>` of enum names to their values (return an empty `Map` if your database doesn't support enums).
 
 ```ts
 import { KyselyTypegenDialect } from "kysely-typegen"
-import type { Kysely } from "kysely"
 
-export class KyselyTypegenMySQLDialect extends KyselyTypegenDialect {
-  public database: KyselyTypegenDialect["database"]
-
-  public readonly scalars: Record<string, string> = {
-    bigint: "number",
+export class KyselyTypegenMSSQLDialect extends KyselyTypegenDialect {
+  public override readonly scalars: Record<string, string> = {
+    bigint: "Int8",
+    bit: "boolean",
     char: "string",
     datetime: "Timestamp",
+    decimal: "Numeric",
     int: "number",
-    json: "Json",
+    nvarchar: "string",
+    smallint: "number",
     text: "string",
-    tinyint: "number",
+    varbinary: "Buffer",
     varchar: "string",
     // ...
   }
+}
+```
 
-  public constructor(input: { database: Kysely<any> }) {
-    super()
-    this.database = input.database
-  }
+If your database supports enums, override the optional `introspectEnums()` hook, which returns two maps:
 
-  protected async getEnumsMap(): Promise<Map<string, string[]>> {
-    // Query your database's information schema for enum types.
-    // Key: enum name, Value: array of enum values.
-    return new Map()
-  }
+- `named`: enum name → values (emitted as `export type Name = "a" | "b"`).
+- `inline`: `${tableName}.${columnName}` → values (emitted inline at the column site, for databases where enums are anonymous per-column).
+
+```ts
+import type { IntrospectedEnums } from "kysely-typegen"
+
+protected override async introspectEnums(): Promise<IntrospectedEnums> {
+  // Query your database's information schema...
+  return { named: [], inline: new Map() }
 }
 ```
 
