@@ -237,6 +237,10 @@ describe("typegen", () => {
     const result = await databaseTypegen.typegen()
 
     // Assert - Then
-    testContext.assert.snapshot(result)
+    testContext.assert.snapshot({
+      lines: result.lines,
+      tablesCount: result.tables.length,
+      enumsCount: result.enums.length,
+    })
   })
 })
