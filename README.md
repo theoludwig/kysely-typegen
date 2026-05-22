@@ -22,7 +22,7 @@ Why `kysely-typegen` if there is already `kysely-codegen`? Comparison:
 
 For example: you can use [Node.js with the `--env-file` CLI option](https://nodejs.org/api/environment_variables.html), `dotenv` dependency is not required (but can be used), **you are in control**.
 
-**Note:** `kysely-typegen` doesn't have the same features and customization as `kysely-codegen`, it has less features to keep it simple and lightweight, but can be extended to your own needs.
+**Note:** `kysely-typegen` doesn't have the same features and customization as `kysely-codegen`, it has less features to keep it simple and lightweight, but can be extended to your own needs. For more details, why this project was created, and the design decisions, see: <https://github.com/RobinBlomberg/kysely-codegen/issues/175>.
 
 ## Prerequisites
 
@@ -76,9 +76,7 @@ const dialect = new PostgresJSDialect({
   }),
 })
 
-export const database = new Kysely<DB>({
-  dialect,
-})
+export const database = new Kysely<DB>({ dialect })
 ```
 
 ### Generate the type definitions
@@ -86,8 +84,9 @@ export const database = new Kysely<DB>({
 Create a script that uses `kysely-typegen` to introspect your database and write the generated types to a file:
 
 ```ts
-// codegen.ts
-// This is an example, you can be more creative and include more logic, for example time it takes to generate, number of tables/enums generated, etc.
+// scripts/typegen.ts
+// This is an example, you can be more creative:
+// time it takes to generate, number of tables/enums generated, etc.
 import fs from "node:fs"
 import path from "node:path"
 
@@ -95,12 +94,10 @@ import { KyselyTypegenPostgresDialect } from "kysely-typegen"
 
 import { database } from "./database.ts"
 
-const databaseTypegen = new KyselyTypegenPostgresDialect({
-  database,
-})
+const databaseTypegen = new KyselyTypegenPostgresDialect({ database })
 const result = await databaseTypegen.typegen()
 const codegenContent = result.lines.join("\n")
-const codegenPath = path.join(process.cwd(), "src/codegen.ts")
+const codegenPath = path.join(process.cwd(), "codegen.ts")
 await fs.promises.writeFile(codegenPath, codegenContent, "utf-8")
 await database.destroy()
 ```
@@ -108,7 +105,7 @@ await database.destroy()
 Run with Node.js (using `--env-file` to load environment variables, no `dotenv` dependency required):
 
 ```sh
-node --env-file=.env scripts/codegen.ts
+node --env-file=.env scripts/typegen.ts
 ```
 
 ### Using the type definitions
@@ -118,7 +115,7 @@ Import `DB` into `new Kysely<DB>`, and you're done!
 ```ts
 import { database } from "./database.ts"
 
-const rows = await database.selectFrom("users").selectAll().execute()
+const rows = await database.selectFrom("User").selectAll().execute()
 //    ^ { createdAt: Date; email: string; id: number; ... }[]
 ```
 
