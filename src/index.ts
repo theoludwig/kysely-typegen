@@ -173,7 +173,12 @@ export class KyselyTypegenPostgresDialect extends KyselyTypegenDialect {
     const enums = new Map<string, string[]>()
     for (const row of rows) {
       const data = row as { enumName: string; enumValue: string }
-      enums.set(data.enumName, [...(enums.get(data.enumName) ?? []), data.enumValue])
+      const existing = enums.get(data.enumName)
+      if (existing == null) {
+        enums.set(data.enumName, [data.enumValue])
+      } else {
+        existing.push(data.enumValue)
+      }
     }
     return enums
   }
