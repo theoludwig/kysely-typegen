@@ -55,6 +55,10 @@ export abstract class KyselyTypegenDialect {
     })
   }
 
+  protected normalizeDataType(dataType: string): string {
+    return dataType
+  }
+
   protected resolveColumnType(
     table: TableMetadata,
     column: ColumnMetadata,
@@ -65,7 +69,8 @@ export abstract class KyselyTypegenDialect {
     if (inlineUnion != null) {
       return inlineUnion
     }
-    return scalars[column.dataType] ?? "unknown"
+    const dataType = this.normalizeDataType(column.dataType)
+    return scalars[dataType] ?? "unknown"
   }
 
   public getTablesTypegen(

@@ -16,7 +16,7 @@ Why `kysely-typegen` if there is already `kysely-codegen`? Comparison:
 | **Dependencies**              | 35 total                                 | 0 (no runtime dependencies)                                                         |
 | **Type**                      | CLI                                      | Library/Programmatic Usage                                                          |
 | **Code Size/Maintainability** | Heavy                                    | Lightweight/Simple and straightforward (string manipulation instead of complex AST) |
-| **Database Support**          | PostgreSQL, MySQL, SQLite, MSSQL, LibSQL | PostgreSQL, MySQL (**can be easily extended to more**)                              |
+| **Database Support**          | PostgreSQL, MySQL, SQLite, MSSQL, LibSQL | PostgreSQL, MySQL, SQLite (**can be easily extended to more**)                      |
 
 `kysely-typegen` is a **library** (not a CLI), which means you are in control of where and how to run it, and is designed to be **extensible**, easy to add support for more database dialects.
 
@@ -107,6 +107,28 @@ export const database = new Kysely<DB>({ dialect })
 export const databaseTypegen = new KyselyTypegenMySQLDialect({ database })
 ```
 
+#### SQLite
+
+```sh
+npm install better-sqlite3
+```
+
+```ts
+// database.ts
+import Database from "better-sqlite3"
+import { Kysely, SqliteDialect } from "kysely"
+import { KyselyTypegenSQLiteDialect } from "kysely-typegen/sqlite"
+
+import type { DB } from "./codegen.ts"
+
+const dialect = new SqliteDialect({
+  database: new Database(process.env["DATABASE_PATH"] ?? "database.sqlite"),
+})
+
+export const database = new Kysely<DB>({ dialect })
+export const databaseTypegen = new KyselyTypegenSQLiteDialect({ database })
+```
+
 ### Generate the type definitions
 
 Create a script that uses `databaseTypegen` to introspect your database and write the generated types to a file. This script is the same regardless of the underlying database:
@@ -148,7 +170,7 @@ Fully type-safe queries derived from your actual database schema.
 
 ## Extending to other database dialects
 
-`kysely-typegen` ships with `KyselyTypegenPostgresDialect` and `KyselyTypegenMySQLDialect`, but you can add support for any database by extending the abstract `KyselyTypegenDialect` class.
+`kysely-typegen` ships with `KyselyTypegenPostgresDialect`, `KyselyTypegenMySQLDialect`, and `KyselyTypegenSQLiteDialect`, but you can add support for any database by extending the abstract `KyselyTypegenDialect` class.
 
 Only one thing is required:
 
@@ -188,6 +210,8 @@ protected override async introspectEnums(): Promise<IntrospectedEnums> {
   return { named: [], inline: new Map() }
 }
 ```
+
+If your database needs to normalize column type spellings before scalar lookup (e.g. strip `VARCHAR(255)` → `VARCHAR`, or uppercase keys), override the optional `normalizeDataType(dataType: string): string` hook.
 
 The base class handles introspection (via Kysely's `database.introspection.getTables()`), sorting, and the final type generation. Contributions of new dialects are welcome!
 
