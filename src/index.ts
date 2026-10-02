@@ -146,14 +146,16 @@ export abstract class KyselyTypegenDialect {
     tables: TableMetadata[]
   }> {
     const [tables, { enums, inlineEnums }] = await Promise.all([this.getTables(), this.getEnums()])
-    const lines: string[] = [...PREAMBLE_LINES]
-    lines.push(...this.getEnumsTypegen(enums))
-    lines.push(...this.getTablesTypegen(tables, enums, inlineEnums))
-    lines.push("export interface DB {")
-    for (const table of tables) {
-      lines.push(`  ${table.name}: ${table.name}`)
-    }
-    lines.push("}")
+    const lines: string[] = [
+      ...PREAMBLE_LINES,
+      ...this.getEnumsTypegen(enums),
+      ...this.getTablesTypegen(tables, enums, inlineEnums),
+      "export interface DB {",
+      ...tables.map((table) => {
+        return `  ${table.name}: ${table.name}`
+      }),
+      "}",
+    ]
     return { lines, enums, inlineEnums, tables }
   }
 }

@@ -52,12 +52,12 @@ export class KyselyTypegenMySQLDialect extends KyselyTypegenDialect {
       ])
       .where("columns.TABLE_SCHEMA", "=", sql`database()`)
       .where("columns.DATA_TYPE", "in", ["enum", "set"])
+      .$castTo<{ tableName: string; columnName: string; columnType: string }>()
       .execute()
 
     const inline = new Map<string, string[]>()
     for (const row of rows) {
-      const data = row as { tableName: string; columnName: string; columnType: string }
-      inline.set(`${data.tableName}.${data.columnName}`, parseMysqlEnumColumnType(data.columnType))
+      inline.set(`${row.tableName}.${row.columnName}`, parseMysqlEnumColumnType(row.columnType))
     }
     return { named: [], inline }
   }
