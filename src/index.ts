@@ -73,6 +73,24 @@ export abstract class KyselyTypegenDialect {
     return scalars[dataType] ?? "unknown"
   }
 
+  protected formatColumnComment(comment: string): string[] {
+    const trimmedComment = comment.trim()
+    if (trimmedComment.length === 0) {
+      return []
+    }
+    const lines = trimmedComment.replaceAll("*/", "*\\/").split(/\r?\n/u)
+    if (lines.length === 1) {
+      return [`  /** ${lines[0]} */`]
+    }
+    return [
+      "  /**",
+      ...lines.map((line) => {
+        return line.length === 0 ? "   *" : `   * ${line}`
+      }),
+      "   */",
+    ]
+  }
+
   public getTablesTypegen(
     tables: TableMetadata[],
     enums: EnumMetadata[],
@@ -93,6 +111,9 @@ export abstract class KyselyTypegenDialect {
         let columnType = column.isNullable ? `${baseType} | null` : baseType
         if (column.hasDefaultValue || column.isAutoIncrementing) {
           columnType = `Generated<${columnType}>`
+        }
+        if (column.comment != null) {
+          result.push(...this.formatColumnComment(column.comment))
         }
         result.push(`  ${column.name}: ${columnType}`)
       }

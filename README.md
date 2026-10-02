@@ -168,6 +168,19 @@ const rows = await database.selectFrom("User").selectAll().execute()
 
 Fully type-safe queries derived from your actual database schema.
 
+### Column comments
+
+Column comments (`COMMENT ON COLUMN` in PostgreSQL, `COMMENT '...'` in MySQL) are emitted as JSDoc above the column, so they show up in your editor on hover:
+
+```ts
+export interface Users {
+  /** Contact email address. */
+  email: string | null
+}
+```
+
+SQLite has no column comments, so none are generated.
+
 ## Extending to other database dialects
 
 `kysely-typegen` ships with `KyselyTypegenPostgresDialect`, `KyselyTypegenMySQLDialect`, and `KyselyTypegenSQLiteDialect`, but you can add support for any database by extending the abstract `KyselyTypegenDialect` class.

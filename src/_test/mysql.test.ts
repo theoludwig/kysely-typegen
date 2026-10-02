@@ -117,7 +117,9 @@ const createSchema = async (database: Kysely<any>): Promise<void> => {
     .addColumn("username", "varchar(50)", (column) => {
       return column.notNull().unique()
     })
-    .addColumn("email", "text")
+    .addColumn("email", "text", (column) => {
+      return column.modifyEnd(sql`comment ${sql.lit("Contact email address.")}`)
+    })
     .addColumn("role", sql`enum('admin','member','guest')`, (column) => {
       return column.notNull().defaultTo("member")
     })
@@ -144,9 +146,13 @@ const createSchema = async (database: Kysely<any>): Promise<void> => {
       return column.notNull().defaultTo("EUR")
     })
     .addColumn("amountCents", "integer", (column) => {
-      return column.notNull()
+      return column
+        .notNull()
+        .modifyEnd(sql`comment ${sql.lit("Total amount in cents.\n\nExcludes taxes.")}`)
     })
-    .addColumn("note", "text")
+    .addColumn("note", "text", (column) => {
+      return column.modifyEnd(sql`comment ${sql.lit("Free text, may contain */ characters.")}`)
+    })
     .addColumn("createdAt", "timestamp", (column) => {
       return column.notNull().defaultTo(sql`current_timestamp`)
     })

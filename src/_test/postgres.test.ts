@@ -195,6 +195,16 @@ const createSchema = async (database: Kysely<any>): Promise<void> => {
       return column.notNull().defaultTo(sql`now()`)
     })
     .execute()
+
+  await sql`comment on column ${sql.ref("Users.email")} is ${sql.lit("Contact email address.")}`.execute(
+    database,
+  )
+  await sql`comment on column ${sql.ref("Orders.amountCents")} is ${sql.lit("Total amount in cents.\n\nExcludes taxes.")}`.execute(
+    database,
+  )
+  await sql`comment on column ${sql.ref("Orders.note")} is ${sql.lit("Free text, may contain */ characters.")}`.execute(
+    database,
+  )
 }
 
 describe("typegen PostgreSQL", () => {
