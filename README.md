@@ -16,7 +16,7 @@ Why `kysely-typegen` if there is already `kysely-codegen`? Comparison:
 | **Dependencies**              | 35 total                                 | 0 (no runtime dependencies)                                                         |
 | **Type**                      | CLI                                      | Library/Programmatic Usage                                                          |
 | **Code Size/Maintainability** | Heavy                                    | Lightweight/Simple and straightforward (string manipulation instead of complex AST) |
-| **Database Support**          | PostgreSQL, MySQL, SQLite, MSSQL, LibSQL | PostgreSQL, MySQL, SQLite (**can be easily extended to more**)                      |
+| **Database Support**          | PostgreSQL, MySQL, SQLite, MSSQL, LibSQL | PostgreSQL, PGlite, MySQL, SQLite (**can be easily extended to more**)              |
 
 `kysely-typegen` is a **library** (not a CLI), which means you are in control of where and how to run it, and is designed to be **extensible**, easy to add support for more database dialects.
 
@@ -73,6 +73,30 @@ const dialect = new PostgresJSDialect({
     password: process.env["DATABASE_PASSWORD"] ?? "password",
     port: Number.parseInt(process.env["DATABASE_PORT"] ?? "5432", 10),
   }),
+})
+
+export const database = new Kysely<DB>({ dialect })
+export const databaseTypegen = new KyselyTypegenPostgresDialect({ database })
+```
+
+#### PGlite
+
+[PGlite](https://pglite.dev/) is PostgreSQL compiled to WebAssembly that runs in-process. Use Kysely's built-in [`PGliteDialect`](https://kysely-org.github.io/kysely-apidoc/classes/PGliteDialect.html) with `KyselyTypegenPostgresDialect`: PGlite is introspected exactly like PostgreSQL. Because `kysely-typegen` is a library, you pass it the `Kysely` instance you already have, so it works with in-process databases like PGlite, including in-memory ones, without a connection string or CLI-specific dialect support.
+
+```sh
+npm install @electric-sql/pglite
+```
+
+```ts
+// database.ts
+import { PGlite } from "@electric-sql/pglite"
+import { Kysely, PGliteDialect } from "kysely"
+import { KyselyTypegenPostgresDialect } from "kysely-typegen/postgres"
+
+import type { DB } from "./codegen.ts"
+
+const dialect = new PGliteDialect({
+  pglite: new PGlite(process.env["DATABASE_PATH"] ?? "./pgdata"),
 })
 
 export const database = new Kysely<DB>({ dialect })

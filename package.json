@@ -41,6 +41,7 @@
     "release": "semantic-release"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "0.5.8",
     "@testcontainers/mysql": "12.2.0",
     "@testcontainers/postgresql": "12.2.0",
     "@types/better-sqlite3": "9.6.0",

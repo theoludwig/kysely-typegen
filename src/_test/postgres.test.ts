@@ -1,6 +1,7 @@
+import { PGlite } from "@electric-sql/pglite"
 import type { StartedPostgreSqlContainer } from "@testcontainers/postgresql"
 import { PostgreSqlContainer } from "@testcontainers/postgresql"
-import { Kysely, PostgresDialect, sql } from "kysely"
+import { Kysely, PGliteDialect, PostgresDialect, sql } from "kysely"
 import { PostgresJSDialect } from "kysely-postgres-js"
 import { after, before, describe, it } from "node:test"
 import pg from "pg"
@@ -266,6 +267,39 @@ describe("typegen PostgreSQL", () => {
     // Act - When
     const result = await databaseTypegen.typegen()
     await databasePg.destroy()
+
+    // Assert - Then
+    testContext.assert.snapshot({
+      lines: result.lines,
+      tablesCount: result.tables.length,
+      enumsCount: result.enums.length,
+      inlineEnumsCount: result.inlineEnums.size,
+    })
+  })
+})
+
+describe("typegen PGlite", () => {
+  let database: Kysely<any>
+
+  before(async () => {
+    database = new Kysely<any>({
+      dialect: new PGliteDialect({
+        pglite: new PGlite(),
+      }),
+    })
+    await createSchema(database)
+  })
+
+  after(async () => {
+    await database.destroy()
+  })
+
+  it("generate types matching snapshot", async (testContext) => {
+    // Arrange - Given
+    const databaseTypegen = new KyselyTypegenPostgresDialect({ database })
+
+    // Act - When
+    const result = await databaseTypegen.typegen()
 
     // Assert - Then
     testContext.assert.snapshot({
